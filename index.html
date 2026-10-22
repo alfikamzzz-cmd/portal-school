@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f5f4a">
+<title>Portal Sekolah</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5f4a'/%3E%3Cpath d='M12 24 32 14l20 10-20 10z' fill='%23fff'/%3E%3Cpath d='M20 31v10c0 4 24 4 24 0V31l-12 6z' fill='%23cfe6dc'/%3E%3C/svg%3E">
+<style>
+:root{
+  --hijau:#1f5f4a; --hijau-muda:#e4f0ea; --bg:#f4f6f5; --kartu:#fff;
+  --teks:#1d2a25; --redup:#6b7a73; --garis:#dbe3df;
+  --H:#2e9d6b; --I:#3b7dd8; --S:#d9a21b; --A:#d4463b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--teks);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+button,input,select{font:inherit}
+h2{margin:0;font-size:1.15rem}
+.muted{color:var(--redup);font-size:.9rem}
+
+/* Login */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login .card{width:100%;max-width:380px}
+.login h1{margin:0 0 4px;font-size:1.6rem;color:var(--hijau)}
+.role{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.role button{padding:10px;border:1px solid var(--garis);background:#fff;border-radius:8px;cursor:pointer}
+.role button.on{background:var(--hijau);border-color:var(--hijau);color:#fff}
+.err{color:var(--A);font-size:.9rem;margin:8px 0 0}
+
+/* Kartu & form */
+.card{background:var(--kartu);border:1px solid var(--garis);border-radius:12px;padding:18px;margin-bottom:16px}
+label{display:block;font-size:.85rem;color:var(--redup);margin-bottom:10px}
+input,select{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--garis);border-radius:8px;background:#fff;color:var(--teks)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--hijau);outline-offset:1px}
+.btn{background:var(--hijau);color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;color:var(--hijau);border:1px solid var(--hijau)}
+.btn.small{padding:4px 10px;font-size:.85rem}
+.btn.full{width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end}
+
+/* Layout aplikasi */
+.top{background:var(--hijau);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top small{display:block;opacity:.8}
+.top .btn.ghost{color:#fff;border-color:#ffffff88}
+.tabs{display:flex;gap:4px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--garis);overflow-x:auto;position:sticky;top:0;z-index:2}
+.tabs button{background:none;border:0;padding:8px 16px;border-radius:8px;cursor:pointer;color:var(--redup);white-space:nowrap}
+.tabs button.on{background:var(--hijau-muda);color:var(--hijau);font-weight:600}
+main{max-width:820px;margin:0 auto;padding:18px 14px 40px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.row input{width:auto}
+
+/* Daftar & tabel */
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--garis);flex-wrap:wrap}
+.item:first-child{border-top:0}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--garis);white-space:nowrap}
+th{color:var(--redup);font-weight:600;font-size:.85rem}
+
+/* Tombol absen */
+.seg{display:flex;gap:6px}
+.seg button{width:40px;height:40px;border-radius:8px;border:1px solid var(--garis);background:#fff;cursor:pointer;font-weight:700;color:var(--redup)}
+.seg button.on{color:#fff;border-color:transparent}
+.seg .on.H,.dot.H{background:var(--H)} .seg .on.I,.dot.I{background:var(--I)}
+.seg .on.S,.dot.S{background:var(--S)} .seg .on.A,.dot.A{background:var(--A)}
+.dot{display:inline-block;color:#fff;border-radius:6px;padding:2px 10px;font-size:.85rem;font-weight:600}
+
+/* Ringkasan */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--garis);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.stat span{font-size:.8rem;color:var(--redup)}
+.hari{font-weight:700;color:var(--hijau);margin:14px 0 4px}
+.hari:first-child{margin-top:0}
+
+@media (max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===== DATABASE =====
+   Data disimpan di browser (localStorage) dengan kunci di bawah ini.
+   Tidak butuh server. Untuk mereset data: hapus data situs di browser. */
+const KEY = 'portal_sekolah_db';
+const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const STAT = { H: 'Hadir', I: 'Izin', S: 'Sakit', A: 'Alpa' };
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hariIni = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+
+function seed() {
+  return {
+    users: [
+      { id: 'g1', role: 'guru', nama: 'Bu Rina', username: 'guru', password: 'guru123' },
+      { id: 's1', role: 'siswa', nama: 'Andi Pratama', username: 'siswa1', password: 'siswa123' },
+      { id: 's2', role: 'siswa', nama: 'Budi Santoso', username: 'siswa2', password: 'siswa123' },
+      { id: 's3', role: 'siswa', nama: 'Citra Lestari', username: 'siswa3', password: 'siswa123' }
+    ],
+    jadwal: [
+      { id: 'j1', hari: 'Senin', jam: '07:00-08:30', mapel: 'Matematika' },
+      { id: 'j2', hari: 'Senin', jam: '08:30-10:00', mapel: 'Bahasa Indonesia' },
+      { id: 'j3', hari: 'Selasa', jam: '07:00-08:30', mapel: 'IPA' }
+    ],
+    absen: {},
+    nilai: [
+      { id: 'n1', siswaId: 's1', mapel: 'Matematika', jenis: 'UTS', nilai: 85 },
+      { id: 'n2', siswaId: 's2', mapel: 'Matematika', jenis: 'UTS', nilai: 78 }
+    ]
+  };
+}
+
+let db;
+try { db = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch (e) { db = seed(); }
+let me = null;
+try { me = JSON.parse(sessionStorage.getItem('me')); } catch (e) { }
+let tab = '', tgl = hariIni(), role = 'guru', galat = '';
+
+const save = () => localStorage.setItem(KEY, JSON.stringify(db));
+const siswa = () => db.users.filter(u => u.role === 'siswa');
+const nm = id => (db.users.find(u => u.id === id) || { nama: '(dihapus)' }).nama;
+const kosong = t => `<p class="muted">${t}</p>`;
+
+/* ===== AKSI ===== */
+function pilihRole(r) { role = r; galat = ''; render(); }
+function login(e) {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const u = db.users.find(x => x.role === role && x.username === f.get('u').trim() && x.password === f.get('p'));
+  if (!u) { galat = 'Username atau kata sandi salah.'; return render(); }
+  me = u; galat = ''; tab = '';
+  sessionStorage.setItem('me', JSON.stringify({ id: u.id, role: u.role, nama: u.nama }));
+  me = { id: u.id, role: u.role, nama: u.nama };
+  render();
+}
+function logout() { me = null; sessionStorage.removeItem('me'); render(); }
+function go(t) { tab = t; render(); }
+function setAbsen(id, k) {
+  (db.absen[tgl] = db.absen[tgl] || {})[id] = k;
+  save(); render();
+}
+function tambah(e, jenis) {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  if (jenis === 'jadwal') db.jadwal.push({ id: uid(), hari: f.hari, jam: f.jam, mapel: f.mapel });
+  if (jenis === 'nilai') db.nilai.push({ id: uid(), siswaId: f.siswaId, mapel: f.mapel, jenis: f.jenis, nilai: Number(f.nilai) });
+  if (jenis === 'siswa') {
+    if (db.users.some(u => u.username === f.username)) return alert('Username sudah dipakai.');
+    db.users.push({ id: uid(), role: 'siswa', nama: f.nama, username: f.username, password: f.password });
+  }
+  save(); render();
+}
+function hapus(koleksi, id) {
+  if (!confirm('Hapus data ini?')) return;
+  if (koleksi === 'siswa') {
+    db.users = db.users.filter(u => u.id !== id);
+    db.nilai = db.nilai.filter(n => n.siswaId !== id);
+    Object.values(db.absen).forEach(m => delete m[id]);
+  } else db[koleksi] = db[koleksi].filter(x => x.id !== id);
+  save(); render();
+}
+
+/* ===== TAMPILAN ===== */
+const jadwalTabel = (aksi) => {
+  if (!db.jadwal.length) return kosong('Belum ada jadwal.');
+  return HARI.map(h => {
+    const j = db.jadwal.filter(x => x.hari === h).sort((a, b) => a.jam.localeCompare(b.jam));
+    if (!j.length) return '';
+    return `<div class="hari">${h}</div>` + j.map(x => `<div class="item"><span><b>${esc(x.jam)}</b> &nbsp;${esc(x.mapel)}</span>${aksi ? `<button class="btn ghost small" onclick="hapus('jadwal','${x.id}')">Hapus</button>` : ''}</div>`).join('');
+  }).join('');
+};
+
+const nilaiTabel = (list, tampilNama) => !list.length ? kosong('Belum ada nilai.') :
+  `<div class="scroll"><table><tr>${tampilNama ? '<th>Siswa</th>' : ''}<th>Mapel</th><th>Jenis</th><th>Nilai</th>${tampilNama ? '<th></th>' : ''}</tr>` +
+  list.map(n => `<tr>${tampilNama ? `<td>${esc(nm(n.siswaId))}</td>` : ''}<td>${esc(n.mapel)}</td><td>${esc(n.jenis)}</td><td><b>${n.nilai}</b></td>${tampilNama ? `<td><button class="btn ghost small" onclick="hapus('nilai','${n.id}')">Hapus</button></td>` : ''}</tr>`).join('') +
+  '</table></div>';
+
+const views = {
+  gAbsen() {
+    const a = db.absen[tgl] || {};
+    return `<section class="card"><div class="row"><h2>Absensi</h2><input type="date" value="${tgl}" onchange="tgl=this.value;render()"></div>
+    ${siswa().map(s => `<div class="item"><span>${esc(s.nama)}</span><div class="seg">${Object.keys(STAT).map(k => `<button class="${a[s.id] === k ? 'on ' + k : ''}" title="${STAT[k]}" onclick="setAbsen('${s.id}','${k}')">${k}</button>`).join('')}</div></div>`).join('') || kosong('Belum ada siswa. Tambahkan di tab Siswa.')}
+    <p class="muted">H = Hadir, I = Izin, S = Sakit, A = Alpa. Tersimpan otomatis.</p></section>`;
+  },
+  gJadwal() {
+    return `<section class="card"><h2>Tambah jadwal</h2><br>
+    <form onsubmit="tambah(event,'jadwal')"><div class="grid">
+      <label>Hari<select name="hari">${HARI.map(h => `<option>${h}</option>`).join('')}</select></label>
+      <label>Jam<input name="jam" placeholder="07:00-08:30" required></label>
+      <label>Mata pelajaran<input name="mapel" required></label>
+      <label><button class="btn full">Tambah</button></label></div></form></section>
+    <section class="card"><h2>Jadwal pelajaran</h2><br>${jadwalTabel(true)}</section>`;
+  },
+  gNilai() {
+    return `<section class="card"><h2>Input nilai</h2><br>
+    <form onsubmit="tambah(event,'nilai')"><div class="grid">
+      <label>Siswa<select name="siswaId" required>${siswa().map(s => `<option value="${s.id}">${esc(s.nama)}</option>`).join('')}</select></label>
+      <label>Mata pelajaran<input name="mapel" required></label>
+      <label>Jenis<select name="jenis"><option>Tugas</option><option>UH</option><option>UTS</option><option>UAS</option></select></label>
+      <label>Nilai<input name="nilai" type="number" min="0" max="100" required></label>
+      <label><button class="btn full">Simpan</button></label></div></form></section>
+    <section class="card"><h2>Daftar nilai</h2><br>${nilaiTabel(db.nilai, true)}</section>`;
+  },
+  gSiswa() {
+    return `<section class="card"><h2>Tambah siswa</h2><br>
+    <form onsubmit="tambah(event,'siswa')"><div class="grid">
+      <label>Nama lengkap<input name="nama" required></label>
+      <label>Username<input name="username" required></label>
+      <label>Kata sandi<input name="password" required></label>
+      <label><button class="btn full">Tambah</button></label></div></form></section>
+    <section class="card"><h2>Daftar siswa</h2>
+    ${siswa().map(s => `<div class="item"><span>${esc(s.nama)} <span class="muted">(${esc(s.username)})</span></span><button class="btn ghost small" onclick="hapus('siswa','${s.id}')">Hapus</button></div>`).join('') || kosong('Belum ada siswa.')}</section>`;
+  },
+  sAbsen() {
+    const rec = Object.entries(db.absen).filter(([, m]) => m[me.id]).sort().reverse();
+    const c = { H: 0, I: 0, S: 0, A: 0 };
+    rec.forEach(([, m]) => c[m[me.id]]++);
+    return `<div class="stats">${Object.keys(STAT).map(k => `<div class="stat"><b>${c[k]}</b><span>${STAT[k]}</span></div>`).join('')}</div>
+    <section class="card"><h2>Riwayat absensi</h2>
+    ${rec.map(([d, m]) => `<div class="item"><span>${new Date(d + 'T00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="dot ${m[me.id]}">${STAT[m[me.id]]}</span></div>`).join('') || kosong('Belum ada data absensi.')}</section>`;
+  },
+  sJadwal() { return `<section class="card"><h2>Jadwal pelajaran</h2><br>${jadwalTabel(false)}</section>`; },
+  sNilai() {
+    const l = db.nilai.filter(n => n.siswaId === me.id);
+    const rata = l.length ? (l.reduce((t, n) => t + n.nilai, 0) / l.length).toFixed(1) : '-';
+    return `<div class="stats"><div class="stat"><b>${l.length}</b><span>Nilai</span></div><div class="stat"><b>${rata}</b><span>Rata-rata</span></div></div>
+    <section class="card"><h2>Daftar nilai</h2><br>${nilaiTabel(l, false)}</section>`;
+  }
+};
+
+function render() {
+  const app = document.getElementById('app');
+  if (!me) {
+    app.innerHTML = `<div class="login"><form class="card" onsubmit="login(event)">
+      <h1>Portal Sekolah</h1><div class="muted">Masuk untuk melihat absensi, jadwal, dan nilai.</div>
+      <div class="role">${['guru', 'siswa'].map(r => `<button type="button" class="${role === r ? 'on' : ''}" onclick="pilihRole('${r}')">${r === 'guru' ? 'Guru' : 'Siswa'}</button>`).join('')}</div>
+      <label>Username<input name="u" autocomplete="username" required></label>
+      <label>Kata sandi<input name="p" type="password" autocomplete="current-password" required></label>
+      <button class="btn full">Masuk</button>${galat ? `<p class="err">${galat}</p>` : ''}
+      <p class="muted">Contoh: guru / guru123 &nbsp;·&nbsp; siswa1 / siswa123</p></form></div>`;
+    return;
+  }
+  const guru = me.role === 'guru';
+  const tabs = guru ? ['Absen', 'Jadwal', 'Nilai', 'Siswa'] : ['Absen', 'Jadwal', 'Nilai'];
+  if (!tabs.includes(tab)) tab = tabs[0];
+  app.innerHTML = `<header class="top"><div><b>Portal Sekolah</b><small>${esc(me.nama)} (${guru ? 'Guru' : 'Siswa'})</small></div><button class="btn ghost small" onclick="logout()">Keluar</button></header>
+    <nav class="tabs">${tabs.map(t => `<button class="${t === tab ? 'on' : ''}" onclick="go('${t}')">${t}</button>`).join('')}</nav>
+    <main>${views[(guru ? 'g' : 's') + tab]()}</main>`;
+}
+render();
+
+</script>
+<script>
+/* Manifest dibuat langsung dari dalam file ini (tanpa file terpisah) */
+try {
+  const m = {name:'Portal Sekolah',short_name:'Portal',display:'standalone',background_color:'#f4f6f5',theme_color:'#1f5f4a',
+    start_url:location.href.split('#')[0],
+    icons:[{src:'data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='#1f5f4a'/><path d='M12 24 32 14l20 10-20 10z' fill='#fff'/><path d='M20 31v10c0 4 24 4 24 0V31l-12 6z' fill='#cfe6dc'/></svg>"),sizes:'any',type:'image/svg+xml',purpose:'any'}]};
+  const l=document.createElement('link');l.rel='manifest';
+  l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
+  document.head.appendChild(l);
+} catch(e) {}
+</script>
+</body>
+</html>
